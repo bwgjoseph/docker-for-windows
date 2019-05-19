@@ -1,0 +1,25 @@
+version: '3.7'
+
+services:
+  redis:
+    image: redis:5.0.5-alpine
+    container_name: redis
+    ports:
+      - 6379:6379
+    volumes:
+      - redis_data:/data
+    networks:
+      - redisnet
+    restart: unless-stopped
+    # Start with persistent-storage
+    # https://redis.io/topics/persistence
+    # https://github.com/docker-library/docs/blob/55604f7900451290144c0081e7f622297e519f61/redis/README.md#start-with-persistent-storage
+    command: ["redis-server", "--appendonly", "yes"]
+
+networks:
+  redisnet:
+    driver: bridge
+
+volumes:
+    redis_data:
+        # external: true // Specify if you wish to create yourself

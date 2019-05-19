@@ -1,0 +1,18 @@
+version: '3.7'
+
+services:
+  portainer:
+    image: portainer/portainer:1.20.2
+    container_name: portainer
+    ports:
+      - 9000:9000
+    volumes:
+      - portainer_data:/data
+      - /var/run/docker.sock:/var/run/docker.sock
+      # If you are using `Windows Container Mode`, use instead of the above
+      # - \\.\pipe\docker_engine:\\.\pipe\docker_engine
+    restart: unless-stopped
+
+volumes:
+    portainer_data:
+        # external: true // Specify if you wish to create yourself

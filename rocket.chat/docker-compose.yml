@@ -1,0 +1,67 @@
+version: '3.7'
+
+services:
+  rocketchat:
+    image: rocketchat/rocket.chat:1.0.3
+    container_name: rocketchat
+    command: bash -c 'for i in `seq 1 30`; do node main.js && s=$$? && break || s=$$?; echo "Tried $$i times. Waiting 5 secs..."; sleep 5; done; (exit $$s)'
+    ports:
+      - 3000:3000
+    volumes:
+      - rc_uploads:/app/uploads
+    environment:
+      - PORT=3000
+      - ROOT_URL=http://localhost:3000
+      - MONGO_URL=mongodb://mongo:27017/rocketchat
+      - MONGO_OPLOG_URL=mongodb://mongo:27017/local
+    networks:
+      - rcnet
+    restart: unless-stopped
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:4.1.11
+    container_name: rc_mongo
+    ports:
+      - 27017:27017
+    volumes:
+      - rc_mongo_db:/data/db
+      - rc_mongo_dump:/dump
+      - rc_mongo_configdb:/data/configdb
+    command: mongod --oplogSize 128 --replSet rs0
+    networks:
+      - rcnet
+    restart: unless-stopped
+
+  # this container's job is just run the command to initialize the replica set.
+  # it will run the command and remove himself (it will not stay running)
+  mongo-init-replica:
+    image: mongo:4.1.11
+    container_name: rc_mongo_repl
+    command: 'bash -c "for i in `seq 1 30`; do mongo mongo/rocketchat --eval \"rs.initiate({ _id: ''rs0'', members: [ { _id: 0, host: ''localhost:27017'' } ]})\" && s=$$? && break || s=$$?; echo \"Tried $$i times. Waiting 5 secs...\"; sleep 5; done; (exit $$s)"'
+    volumes:
+      - rc_mongo_repl_db:/data/db
+      - rc_mongo_repl_configdb:/data/configdb
+    networks:
+      - rcnet
+    depends_on:
+      - mongo
+
+networks:
+  rcnet:
+    driver: bridge
+
+volumes:
+    rc_mongo_dump:
+        # external: true // Specify if you wish to create yourself
+    rc_mongo_db:
+        # external: true // Specify if you wish to create yourself
+    rc_mongo_configdb:
+        # external: true // Specify if you wish to create yourself
+    rc_uploads:
+        # external: true // Specify if you wish to create yourself
+    rc_mongo_repl_db:
+        # external: true // Specify if you wish to create yourself
+    rc_mongo_repl_configdb:
+        # external: true // Specify if you wish to create yourself
