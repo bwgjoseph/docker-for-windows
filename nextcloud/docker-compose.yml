@@ -1,0 +1,87 @@
+version: '3.7'
+
+services:
+  nextcloud:
+    image: nextcloud:17.0.0-fpm
+    container_name: nextcloud-server
+    restart: unless-stopped
+    expose:
+      - '80'
+      - '9000'
+    networks:
+      - ncnet
+    volumes:
+      - nc_server_appdata:/var/www/html
+    depends_on:
+      - maria
+    environment:
+      - MYSQL_HOST=maria
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+
+  maria:
+    image: mariadb:10.4.8
+    container_name: nextcloud-mariadb
+    command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
+    volumes:
+      - nc_maria_data:/var/lib/mysql
+    networks:
+      - ncnet
+    restart: unless-stopped
+    environment:
+      - MYSQL_ROOT_PASSWORD=password
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=nextcloud
+      - MYSQL_USER=nextcloud
+
+  onlyoffice-document-server:
+    image: onlyoffice/documentserver:5.4.1.39
+    container_name: onlyoffice-document-server
+    restart: unless-stopped
+    networks:
+      - ncnet
+    expose:
+      - '80'
+      - '443'
+    volumes:
+      - nc_onlyoffice_data:/var/www/onlyoffice/Data
+      - nc_onlyoffice_log:/var/log/onlyoffice
+      - nc_onlyoffice_postgresql:/var/lib/postgresql
+      - nc_onlyoffice_fonts:/usr/share/fonts/truetype/custom
+      - nc_onlyoffice_lib:/var/lib/onlyoffice
+
+  nginx:
+    image: nginx:1.17.4
+    container_name: nginx-server
+    restart: unless-stopped
+    depends_on:
+      - maria
+    ports:
+      - 7000:80
+      - 7443:443
+    networks:
+      - ncnet
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - nc_server_appdata:/var/www/html
+
+networks:
+  ncnet:
+    driver: 'bridge'
+
+volumes:
+  nc_server_appdata:
+      # external: true // Specify if you wish to create yourself
+  nc_maria_data:
+        # external: true // Specify if you wish to create yourself
+  nc_onlyoffice_data:
+        # external: true // Specify if you wish to create yourself
+  nc_onlyoffice_log:
+      # external: true // Specify if you wish to create yourself
+  nc_onlyoffice_postgresql:
+      # external: true // Specify if you wish to create yourself
+  nc_onlyoffice_fonts:
+      # external: true // Specify if you wish to create yourself
+  nc_onlyoffice_lib:
+      # external: true // Specify if you wish to create yourself
