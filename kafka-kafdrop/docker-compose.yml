@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+  kafka:
+    image: obsidiandynamics/kafka:2.3.0-11
+    container_name: od-kafka
+    restart: unless-stopped
+    ports:
+      - "2181:2181"
+      - "9092:9092"
+    networks:
+      - kafnet
+    volumes:
+      - od_kakfa_lib:/var/lib/kafka
+    environment:
+      KAFKA_LISTENERS: "INTERNAL://:29092,EXTERNAL://:9092"
+      KAFKA_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://localhost:9092"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_ZOOKEEPER_SESSION_TIMEOUT: "6000"
+      KAFKA_RESTART_ATTEMPTS: "10"
+      KAFKA_RESTART_DELAY: "5"
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
+
+  kafdrop:
+    image: obsidiandynamics/kafdrop:3.14.0
+    container_name: od-kafdrop
+    restart: unless-stopped
+    ports:
+      - "9014:9000"
+    networks:
+      - kafnet
+    environment:
+      KAFKA_BROKERCONNECT: "kafka:29092"
+      JVM_OPTS: "-Xms16M -Xmx48M -Xss180K -XX:-TieredCompilation -XX:+UseStringDeduplication -noverify"
+    depends_on:
+      - "kafka"
+
+networks:
+  kafnet:
+    driver: 'bridge'
+
+volumes:
+  od_kakfa_lib:
+      # external: true // Specify if you wish to create yourself
