@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   rocketchat:
-    image: rocketchat/rocket.chat:2.2.0
+    image: rocketchat/rocket.chat:2.2.1
     container_name: rocketchat
     command: bash -c 'for i in `seq 1 30`; do node main.js && s=$$? && break || s=$$?; echo "Tried $$i times. Waiting 5 secs..."; sleep 5; done; (exit $$s)'
     ports:
