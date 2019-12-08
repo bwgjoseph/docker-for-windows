@@ -23,7 +23,7 @@ services:
       ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
 
   kafdrop:
-    image: obsidiandynamics/kafdrop:3.18.0
+    image: obsidiandynamics/kafdrop:3.18.1
     container_name: od-kafdrop
     restart: unless-stopped
     ports:

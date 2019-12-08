@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   nextcloud:
-    image: nextcloud:17.0.0-fpm
+    image: nextcloud:17.0.1-fpm
     container_name: nextcloud-server
     restart: unless-stopped
     expose:
@@ -21,7 +21,7 @@ services:
       - MYSQL_USER=nextcloud
 
   maria:
-    image: mariadb:10.4.8
+    image: mariadb:10.4.10
     container_name: nextcloud-mariadb
     command: --transaction-isolation=READ-COMMITTED --binlog-format=ROW
     volumes:
@@ -36,7 +36,7 @@ services:
       - MYSQL_USER=nextcloud
 
   onlyoffice-document-server:
-    image: onlyoffice/documentserver:5.4.1.39
+    image: onlyoffice/documentserver:5.4.2.46
     container_name: onlyoffice-document-server
     restart: unless-stopped
     networks:
@@ -52,7 +52,7 @@ services:
       - nc_onlyoffice_lib:/var/lib/onlyoffice
 
   nginx:
-    image: nginx:1.17.4
+    image: nginx:1.17.6
     container_name: nginx-server
     restart: unless-stopped
     depends_on:

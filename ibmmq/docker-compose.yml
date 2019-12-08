@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   ibmmq:
-    image: ibmcom/mq:9.1.2.0
+    image: ibmcom/mq:9.1.3.0
     container_name: ibmmq
     environment:
       LICENSE: accept
