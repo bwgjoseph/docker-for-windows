@@ -1,0 +1,17 @@
+version: '3.7'
+
+services:
+  portainer:
+    image: hivemq/hivemq-ce:2020.2
+    container_name: hivemq-ce
+    ports:
+      - 8000:8000 # expose ws
+      - 1883:1883 # expose mqtt
+    volumes:
+      - hivemq_data:/opt/hivemq/data
+      - hivemq_log:/opt/hivemq/log
+    restart: unless-stopped
+
+volumes:
+  hivemq_data:
+  hivemq_log:
