@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   portainer:
-    image: hivemq/hivemq-ce:2020.2
+    image: hivemq/hivemq-ce:2020.4
     container_name: hivemq-ce
     ports:
       - 8000:8000 # expose ws

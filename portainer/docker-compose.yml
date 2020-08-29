@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   portainer:
-    image: portainer/portainer:1.23.0
+    image: portainer/portainer:1.24.1
     container_name: portainer
     ports:
       - 9999:9000

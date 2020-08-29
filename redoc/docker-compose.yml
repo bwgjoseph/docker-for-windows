@@ -2,10 +2,10 @@ version: '3.7'
 
 services:
   redoc:
-    image: redocly/redoc:v2.0.0-rc.18
+    image: redocly/redoc:v2.0.0-rc.40
     container_name: redoc
     environment:
-      - SPEC_URL=http://petstore.swagger.io/v2/swagger.json
+      - SPEC_URL=https://petstore.swagger.io/v2/swagger.json
     ports:
       - 5555:80
     restart: unless-stopped

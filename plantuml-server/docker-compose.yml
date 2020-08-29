@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   plantuml-server:
-    image: plantuml/plantuml-server:tomcat
+    image: plantuml/plantuml-server:tomcat-v1.2020.16
     container_name: plantuml-server
     ports:
       - 7070:8080
