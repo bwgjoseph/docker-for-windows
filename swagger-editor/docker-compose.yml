@@ -2,7 +2,7 @@ version: '3.7'
 
 services:
   swagger-editor:
-    image: swaggerapi/swagger-editor:v3.7.1
+    image: swaggerapi/swagger-editor:v3.14.0
     container_name: swagger-editor
     ports:
       - 7000:8080
