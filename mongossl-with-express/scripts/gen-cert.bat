@@ -24,7 +24,7 @@ cat client.key client.crt > client.pem
 
 REM Create clientPFX file (for Java, C#, etc)
 openssl pkcs12 -inkey client.key -in client.crt -export -out client.pfx
-
+REM keytool -import -alias compose -file ./ca.crt -keystore ./javaclient -storetype pkcs12 -storepass password
 
 REM Start mongod with SSL
 REM mkdir -p data/db
