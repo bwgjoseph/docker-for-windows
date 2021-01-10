@@ -1,0 +1,99 @@
+version: '3.7'
+
+services:
+  mongo-primary:
+    image: mongo:4.4.0
+    container_name: mongo-primary
+    ports:
+      - 127.0.10.1:27017:27017
+    networks:
+      - mongo_db_network
+    volumes:
+      - mongo_db_primary:/data/db
+      - mongo_configdb_primary:/data/configdb
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: password
+    restart: unless-stopped
+    depends_on:
+      - mongo-secondary
+      - mongo-arbiter
+    command: "--bind_ip_all --replSet rs0 --port 27017"
+
+  mongo-secondary:
+    image: mongo:4.4.0
+    container_name: mongo-secondary
+    ports:
+      - 127.0.10.2:27017:27017
+    networks:
+      - mongo_db_network
+    volumes:
+      - mongo_db_secondary:/data/db
+      - mongo_configdb_secondary:/data/configdb
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: password
+    restart: unless-stopped
+    command: "--bind_ip_all --replSet rs0 --port 27017"
+
+  mongo-arbiter:
+    image: mongo:4.4.0
+    container_name: mongo-arbiter
+    ports:
+      - 127.0.10.3:27017:27017
+    networks:
+      - mongo_db_network
+    volumes:
+      - mongo_db_arbiter:/data/db
+      - mongo_configdb_arbiter:/data/configdb
+    # environment:
+    #   MONGO_INITDB_ROOT_USERNAME: root
+    #   MONGO_INITDB_ROOT_PASSWORD: password
+    restart: unless-stopped
+    command: "--bind_ip_all --replSet rs0 --port 27017"
+
+  mongo-setup:
+    image: mongo:4.4.0
+    container_name: mongo-setup
+    volumes:
+      - ./scripts:/scripts
+    networks:
+      - mongo_db_network
+    depends_on:
+      - mongo-primary
+      - mongo-secondary
+      - mongo-arbiter
+    entrypoint: [ "/scripts/setup.sh" ]
+    restart: on-failure
+
+  mongo-replicas-express:
+    image: mongo-express:0.54.0
+    container_name: mongo-replicas-express
+    ports:
+      - 38081:8081
+    networks:
+      - mongo_db_network
+    depends_on:
+      - mongo-setup
+    # environment:
+    #   ME_CONFIG_MONGODB_SERVER: mongo-primary,mongo-secondary,mongo-arbiter
+    #   ME_CONFIG_MONGODB_ADMINUSERNAME: root
+    #   ME_CONFIG_MONGODB_ADMINPASSWORD: password
+    restart: unless-stopped
+
+volumes:
+    mongo_db_primary:
+        # external: true // Specify if you wish to create yourself
+    mongo_configdb_primary:
+        # external: true // Specify if you wish to create yourself
+    mongo_db_secondary:
+        # external: true // Specify if you wish to create yourself
+    mongo_configdb_secondary:
+        # external: true // Specify if you wish to create yourself
+    mongo_db_arbiter:
+        # external: true // Specify if you wish to create yourself
+    mongo_configdb_arbiter:
+        # external: true // Specify if you wish to create yourself
+
+networks:
+  mongo_db_network:
