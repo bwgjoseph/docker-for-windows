@@ -1,0 +1,38 @@
+version: '3.7'
+
+services:
+  mongossl:
+    image: mongo:4.4.3
+    container_name: mongossl
+    ports:
+      - 27017:27017
+    volumes:
+      - ./scripts:/home/mongodb/ssl/
+      - mongo_db:/data/db
+      - mongo_configdb:/data/configdb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: password
+    restart: unless-stopped
+    command: "--bind_ip_all --tlsMode preferTLS --tlsCertificateKeyFile /home/mongodb/ssl/server.pem"
+    # command: "--bind_ip_all --tlsMode preferTLS --tlsCAFile /home/mongodb/ssl/ca.crt --tlsCertificateKeyFile /home/mongodb/ssl/server.pem"
+
+  mongossl-express:
+    image: mongo-express:0.54.0
+    container_name: mongossl-express
+    ports:
+      - 8081:8081
+    # volumes:
+    #   - ./scripts:/home/mongodb/ssl/
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: root
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_SERVER: mongossl
+      # ME_CONFIG_MONGODB_CA_FILE: /home/mongodb/ssl/ca.crt q
+    restart: unless-stopped
+
+volumes:
+    mongo_db:
+        # external: true // Specify if you wish to create yourself
+    mongo_configdb:
+        # external: true // Specify if you wish to create yourself
