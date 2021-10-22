@@ -1,0 +1,58 @@
+version: '3.7'
+
+services:
+  oracle:
+    image: oracledb:19.3.0-ee
+    container_name: oracledb-ee
+    restart: unless-stopped
+    #Two ports are exposed: 1521 (Oracle Listener), 5500 (OEM Express).
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      # The data volume to use for the database.
+      # Has to be writable by the Unix "oracle" (uid: 54321) user inside the container!
+      # If omitted the database will not be persisted over container recreation.
+      - oracle_data:/opt/oracle/oradata
+      # Optional: A volume with custom scripts to be run after database startup.
+      # - /opt/oracle/scripts/startup
+      # Optional: A volume with custom scripts to be run after database setup.
+      - ./setup:/opt/oracle/scripts/setup
+    environment:
+      # The Oracle Database SID that should be used (default: ORCLCDB).
+      ORACLE_SID: ORCLCDB
+      # The Oracle Database PDB name that should be used (default: ORCLPDB1).
+      ORACLE_PDB: ORCLPDB1
+      # The Oracle Database SYS, SYSTEM and PDB_ADMIN password (default: auto generated).
+      ORACLE_PWD: 5m0J9FtPEhs=1
+      # The total memory in MB that should be used for all SGA components (optional).
+      # INIT_SGA_SIZE: "0"
+      # The target aggregate PGA memory in MB that should be used for all server processes attached to the instance (optional).
+      # INIT_PGA_SIZE: "0"
+      # The Oracle Database Edition (enterprise/standard).
+      # ORACLE_EDITION: "0"
+      # The character set to use when creating the database (default: AL32UTF8).
+      # ORACLE_CHARACTERSET: "0"
+      # To enable archive log mode when creating the database (default: false).
+      # ENABLE_ARCHIVELOG: "0"
+    networks:
+      - orcl
+
+  # sqlcl:
+  #   image: oracle-sqlcl
+  #   container_name: oracle-sqlcl
+  #   restart: unless-stopped
+  #   depends_on:
+  #     - oracle
+  #   networks:
+  #     - orcl
+
+volumes:
+  oracle_data:
+      # external: true // Specify if you wish to create yourself
+
+networks:
+  orcl:
+    external: true
+  # orclnet:
+  #   driver: 'bridge'
