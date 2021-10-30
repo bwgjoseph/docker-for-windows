@@ -1,0 +1,45 @@
+version: '3.7'
+
+services:
+  gitlabee:
+    image: gitlab/gitlab-ce:latest
+    hostname: mygitlab.com
+    container_name: gitlab-ee
+    environment:
+      GITLAB_OMNIBUS_CONFIG: |
+        gitlab_rails['gitlab_shell_ssh_port'] = 5522
+    ports:
+      - "5580:80"
+      - "5522:22"
+    volumes:
+      - gitlab_data:/var/opt/gitlab
+      - gitlab_logs:/var/log/gitlab
+      - gitlab_config:/etc/gitlab
+    networks:
+      - gitlabnet
+    restart: unless-stopped
+
+  gitlabee-runner:
+    image: gitlab/gitlab-runner:alpine
+    container_name: gitlabee-runner
+    depends_on:
+      - gitlabee
+    volumes:
+      - gitlab_runner_config:/etc/gitlab-runner
+    networks:
+      - gitlabnet
+    restart: unless-stopped
+
+networks:
+  gitlabnet:
+    driver: bridge
+
+volumes:
+  gitlab_data:
+      # external: true // Specify if you wish to create yourself
+  gitlab_logs:
+      # external: true // Specify if you wish to create yourself
+  gitlab_config:
+      # external: true // Specify if you wish to create yourself
+  gitlab_runner_config:
+      # external: true // Specify if you wish to create yourself
