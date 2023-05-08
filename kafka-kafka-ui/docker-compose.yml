@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  kafka:
+    image: bitnami/kafka:3.4.0
+    container_name: bitnami-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    networks:
+      - kafnet
+    volumes:
+      - bitnami_kakfa_lib:/bitnami/kafka
+    environment:
+      ALLOW_PLAINTEXT_LISTENER: yes
+      # newer version of bitnami/kafka requires to CONTROLLER in order to work
+      KAFKA_CFG_LISTENERS: "INTERNAL://:29092,CONTROLLER://:9093,EXTERNAL://:9092"
+      KAFKA_CFG_ADVERTISED_LISTENERS: "INTERNAL://kafka:29092,EXTERNAL://localhost:9092"
+      KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP: "CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT"
+      KAFKA_CFG_INTER_BROKER_LISTENER_NAME: "INTERNAL"
+      KAFKA_CFG_ZOOKEEPER_SESSION_TIMEOUT: "6000"
+      KAFKA_CFG_RESTART_ATTEMPTS: "10"
+      KAFKA_CFG_RESTART_DELAY: "5"
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: "0"
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:v0.6.2
+    ports:
+      - "9090:8080"
+    depends_on:
+      - kafka
+    networks:
+      - kafnet
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:29092
+
+networks:
+  kafnet:
+    driver: 'bridge'
+
+volumes:
+  bitnami_kakfa_lib:
+      # external: true // Specify if you wish to create yourself
