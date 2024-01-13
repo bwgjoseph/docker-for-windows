@@ -1,99 +1,98 @@
-version: '3.7'
+version: '3.9'
 
 services:
-  mongo-primary:
-    image: mongo:4.4.0
-    container_name: mongo-primary
+
+  # mongodb replicaset primary
+  mongo-1:
+    image: mongo:latest
+    container_name: mongo-1
+    restart: always
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
     ports:
-      - 127.0.10.1:27017:27017
-    networks:
-      - mongo_db_network
+      - 27017:27017
     volumes:
-      - mongo_db_primary:/data/db
-      - mongo_configdb_primary:/data/configdb
-    # environment:
-    #   MONGO_INITDB_ROOT_USERNAME: root
-    #   MONGO_INITDB_ROOT_PASSWORD: password
-    restart: unless-stopped
+      - mongo_db:/data/db
+      - mongo_configdb:/data/configdb
+      - ./scripts/mongo-replica.key:/data/mongo-replica.key
     depends_on:
-      - mongo-secondary
-      - mongo-arbiter
-    command: "--bind_ip_all --replSet rs0 --port 27017"
+      - mongo-2
+      - mongo-3
+    entrypoint:
+      - bash
+      - -c
+      - |
+          chmod 400 /data/mongo-replica.key
+          chown 999:999 /data/mongo-replica.key
+          exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet mgrs --keyFile /data/mongo-replica.key"
 
-  mongo-secondary:
-    image: mongo:4.4.0
-    container_name: mongo-secondary
-    ports:
-      - 127.0.10.2:27017:27017
-    networks:
-      - mongo_db_network
+  # mongodb replicaset secondary
+  mongo-2:
+    image: mongo:latest
+    container_name: mongo-2
+    restart: always
+    expose:
+      - 27017
     volumes:
-      - mongo_db_secondary:/data/db
-      - mongo_configdb_secondary:/data/configdb
-    # environment:
-    #   MONGO_INITDB_ROOT_USERNAME: root
-    #   MONGO_INITDB_ROOT_PASSWORD: password
-    restart: unless-stopped
-    command: "--bind_ip_all --replSet rs0 --port 27017"
+      - mongo_db_2:/data/db
+      - mongo_configdb_2:/data/configdb
+      - ./scripts/mongo-replica.key:/data/mongo-replica.key
+    entrypoint:
+      - bash
+      - -c
+      - |
+          chmod 400 /data/mongo-replica.key
+          chown 999:999 /data/mongo-replica.key
+          exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet mgrs --keyFile /data/mongo-replica.key"
 
-  mongo-arbiter:
-    image: mongo:4.4.0
-    container_name: mongo-arbiter
-    ports:
-      - 127.0.10.3:27017:27017
-    networks:
-      - mongo_db_network
+  # mongodb replicaset arbiter
+  mongo-3:
+    image: mongo:latest
+    container_name: mongo-3
+    restart: always
+    expose:
+      - 27017
     volumes:
-      - mongo_db_arbiter:/data/db
-      - mongo_configdb_arbiter:/data/configdb
-    # environment:
-    #   MONGO_INITDB_ROOT_USERNAME: root
-    #   MONGO_INITDB_ROOT_PASSWORD: password
-    restart: unless-stopped
-    command: "--bind_ip_all --replSet rs0 --port 27017"
+      - mongo_db_3:/data/db
+      - mongo_configdb_3:/data/configdb
+      - ./scripts/mongo-replica.key:/data/mongo-replica.key
+    entrypoint:
+      - bash
+      - -c
+      - |
+          chmod 400 /data/mongo-replica.key
+          chown 999:999 /data/mongo-replica.key
+          exec docker-entrypoint.sh $$@
+    command: "mongod --bind_ip_all --replSet mgrs --keyFile /data/mongo-replica.key"
 
   mongo-setup:
-    image: mongo:4.4.0
+    image: mongo:latest
     container_name: mongo-setup
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    depends_on:
+      - mongo-1
+      - mongo-2
+      - mongo-3
     volumes:
-      - ./scripts:/scripts
-    networks:
-      - mongo_db_network
-    depends_on:
-      - mongo-primary
-      - mongo-secondary
-      - mongo-arbiter
-    entrypoint: [ "/scripts/setup.sh" ]
+      - ./scripts/setup.sh:/scripts/setup.sh
     restart: on-failure
-
-  mongo-replicas-express:
-    image: mongo-express:0.54.0
-    container_name: mongo-replicas-express
-    ports:
-      - 38081:8081
-    networks:
-      - mongo_db_network
-    depends_on:
-      - mongo-setup
-    # environment:
-    #   ME_CONFIG_MONGODB_SERVER: mongo-primary,mongo-secondary,mongo-arbiter
-    #   ME_CONFIG_MONGODB_ADMINUSERNAME: root
-    #   ME_CONFIG_MONGODB_ADMINPASSWORD: password
-    restart: unless-stopped
+    entrypoint: ["/bin/bash", "/scripts/setup.sh"]
 
 volumes:
-    mongo_db_primary:
+    mongo_db:
         # external: true // Specify if you wish to create yourself
-    mongo_configdb_primary:
+    mongo_configdb:
         # external: true // Specify if you wish to create yourself
-    mongo_db_secondary:
+    mongo_db_2:
         # external: true // Specify if you wish to create yourself
-    mongo_configdb_secondary:
+    mongo_configdb_2:
         # external: true // Specify if you wish to create yourself
-    mongo_db_arbiter:
+    mongo_db_3:
         # external: true // Specify if you wish to create yourself
-    mongo_configdb_arbiter:
+    mongo_configdb_3:
         # external: true // Specify if you wish to create yourself
-
-networks:
-  mongo_db_network:

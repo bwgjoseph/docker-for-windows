@@ -1,34 +1,47 @@
 #!/bin/bash
 
-echo "Starting replica set initialize"
-until mongo --host mongo-primary --eval "print(\"waited for connection\")"
-do
-    sleep 2
-done
-echo "Connection finished"
-echo "Creating replica set"
+m1=mongo-1
+m2=mongo-2
+m3=mongo-3
+port=27017
 
-mongo --host mongo-primary:27017 <<EOF
-    var config = {
-        "_id": "rs0",
-        "members": [
-            {
-                "_id": 0,
-                "host": "mongo-primary:27017",
-                "priority": 2
-            },
-            {
-                "_id": 1,
-                "host": "mongo-secondary:27017",
-            },
-            {
-                "_id": 2,
-                "host": "mongo-arbiter:27017",
-                "arbiterOnly": true
-            }
-        ]
-    };
-    rs.initiate(config, { force: true });
-    rs.reconfig(config, { force: true });
-    rs.slaveOk();
+echo "###### Waiting for ${m1} instance startup.."
+until mongosh --host ${m1}:${port} --eval 'quit(db.runCommand({ ping: 1 }).ok ? 0 : 2)' &>/dev/null; do
+  printf '.'
+  sleep 1
+done
+echo "###### Working ${m1} instance found, initiating user setup & initializing rs setup.."
+
+# setup user + pass and initialize replica sets
+mongosh --host ${m1}:${port} <<EOF
+var rootUser = 'admin';
+var rootPassword = 'password';
+var admin = db.getSiblingDB('admin');
+admin.auth(rootUser, rootPassword);
+
+var config = {
+    "_id": "mgrs",
+    "version": 1,
+    "members": [
+        {
+            "_id": 1,
+            "host": "${m1}:${port}",
+            "priority": 2
+        },
+        {
+            "_id": 2,
+            "host": "${m2}:${port}",
+            "priority": 1
+        },
+        {
+            "_id": 3,
+            "host": "${m3}:${port}",
+            "priority": 1,
+            "arbiterOnly": true
+        }
+    ]
+};
+rs.initiate(config, { force: true });
+rs.status();
 EOF
+echo "setup completed..."
